@@ -32,7 +32,7 @@ import cv2
 import argparse
 
 """
-python decode_test_dataset.py /workspace/datasets/images/MS-Celeb-1M/test_aligned --tsv_files /workspace/datasets/MS-Celeb-1M/test/aligned_50K.tsv 1>0.1 2>0.2 &
+python decode_testing_dataset.py /workspace/datasets/images/MS-Celeb-1M/test_aligned --tsv_files /workspace/datasets/MS-Celeb-1M/test/aligned_50K.tsv 1>0.1 2>0.2 &
 """
 
 ########################################################################################################################################################################################################
