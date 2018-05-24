@@ -83,6 +83,8 @@ def to_rgb(img):
     return ret
 
 def main(args):
+	network_size = 299
+
 	if(not args.input_tsv_file):
 		raise ValueError('You must supply input TSV file with --input_tsv_file.')
 	if(not args.output_tsv_file):
@@ -122,6 +124,7 @@ def main(args):
 		height, width, channels = input_image.shape
 
 		cv2.imwrite('image.png', input_image)
+		#misc.imsave('image.png', input_image)
 		input_image = misc.imread('image.png')	
 
 		input_clone = np.copy(input_image)
@@ -141,9 +144,10 @@ def main(args):
 		else:
 			cropped_image = input_image
 
-		#cropped_image = input_image
+		#resized_image = cv2.resize(cropped_image, (network_size, network_size), interpolation=cv2.INTER_LINEAR)
+		resized_image = misc.imresize(cropped_image, (network_size, network_size), interp='bilinear')
 
-		class_names_probabilities = classifier_object.classify(cropped_image, print_results=False)
+		class_names_probabilities = classifier_object.classify(resized_image, print_results=False)
 		predicted_name = "Unknown"
 		probability = 0.0
 		if(len(class_names_probabilities) > 0):
