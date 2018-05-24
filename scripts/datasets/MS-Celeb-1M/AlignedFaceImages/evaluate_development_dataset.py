@@ -96,9 +96,28 @@ def main(args):
        		decoded_image_string = base64.b64decode(image_string)
        		image_data = np.fromstring(decoded_image_string, dtype=np.uint8)
        		input_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
+		height, width, channels = input_image.shape
 
 		np_image = np.array(input_image)
 		boxes_c, landmarks = face_detector.detect(np_image)
+
+		face_probability = 0.0
+		found = False
+		crop_box = []
+       		for index in range(boxes_c.shape[0]):      			
+			if(boxes_c[index, 4] > face_probability):
+				found = True
+      				face_probability = boxes_c[index, 4]
+				print(face_probability)
+				bounding_box = boxes_c[index, :4]
+      				crop_box = [int(max(bounding_box[0],0)), int(max(bounding_box[1],0)), int(min(bounding_box[2], width)), int(min(bounding_box[3], height))]
+		if(found):
+			cropped_image = input_image[crop_box[1]:crop_box[3],crop_box[0]:crop_box[2],:]
+		else:
+			cropped_image = input_image
+		
+		cv2.imshow('image', cropped_image)
+		cv2.waitKey();
 
 		class_name = 'name'
 		probability = 1.0
