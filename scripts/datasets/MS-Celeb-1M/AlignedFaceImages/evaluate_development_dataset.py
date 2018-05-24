@@ -143,7 +143,7 @@ def main(args):
 
 		#cropped_image = input_image
 
-		class_names_probabilities = classifier_object.classify(scaled_image, print_results=False)
+		class_names_probabilities = classifier_object.classify(cropped_image, print_results=False)
 		predicted_name = "Unknown"
 		probability = 0.0
 		if(len(class_names_probabilities) > 0):
