@@ -65,10 +65,24 @@ import os
 import cv2
 import argparse
 
+from tfmtcnn.nets.FaceDetector import FaceDetector
+from tfmtcnn.nets.NetworkFactory import NetworkFactory
+
 def main(args):
 
-   	number_of_images = 0
+	if(not args.input_tsv_file):
+		raise ValueError('You must supply input TSV file with --input_tsv_file.')
+	if(not args.output_tsv_file):
+		raise ValueError('You must supply output TSV file with --output_tsv_file.')
 
+	if(not os.path.isfile(args.input_tsv_file)):
+		return(False)
+
+	model_root_dir = NetworkFactory.model_deploy_dir()
+	last_network='ONet'
+	face_detector = FaceDetector(last_network, model_root_dir)
+
+   	number_of_images = 0
 	input_tsv_file = open(args.input_tsv_file, 'r')
 	output_tsv_file = open(args.output_tsv_file, 'w')
 	while( True ):
@@ -83,6 +97,9 @@ def main(args):
        		image_data = np.fromstring(decoded_image_string, dtype=np.uint8)
        		input_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
 
+		np_image = np.array(input_image)
+		boxes_c, landmarks = face_detector.detect(np_image)
+
 		class_name = 'name'
 		probability = 1.0
 		output_tsv_file.write(fields[0] + '\t' + fields[1] + '\t' + fields[2] + '\t' + fields[3] + '\t' + class_name + '\t' + str(probability) + '\n')
@@ -91,8 +108,11 @@ def main(args):
 
 	print('Number of input images - ' + str(number_of_images) + '.')
 
+	return(True)
+
 
 if __name__ == '__main__':
+	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
   
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--input_tsv_file', type=str, help='Input TSV file.')
