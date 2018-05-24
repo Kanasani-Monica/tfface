@@ -21,37 +21,27 @@
 # SOFTWARE.
 
 """
-python evaluate_development_dataset.py --input_tsv_file /workspace/datasets/MS-Celeb-1M/01/development/MsCelebV1-Faces-Aligned-DevSet1.tsv --model_name=inception_resnet_v2 --checkpoint_path=/tensorflow/models/inception_resnet_v2/BEST_MS_100K --dataset_dir=/tensorflow/models/inception_resnet_v2/BEST_MS_100K --output_tsv_file /workspace/datasets/MS-Celeb-1M/01/development/Evaluation-MsCelebV1-Faces-Aligned-DevSet1.tsv
-
-python evaluate_development_dataset.py --input_tsv_file /workspace/datasets/MS-Celeb-1M/01/development/MsCelebV1-Faces-Aligned-DevSet2.tsv --model_name=inception_resnet_v2 --checkpoint_path=/tensorflow/models/inception_resnet_v2/BEST_MS_100K --dataset_dir=/tensorflow/models/inception_resnet_v2/BEST_MS_100K --output_tsv_file /workspace/datasets/MS-Celeb-1M/01/development/Evaluation-MsCelebV1-Faces-Aligned-DevSet2.tsv
+python evaluate_testing_dataset.py --input_tsv_file /workspace/datasets/MS-Celeb-1M/01/testing/aligned_50K.tsv --model_name=inception_resnet_v2 --checkpoint_path=/tensorflow/models/inception_resnet_v2/BEST_MS_100K --dataset_dir=/tensorflow/models/inception_resnet_v2/BEST_MS_100K --output_tsv_file /workspace/datasets/MS-Celeb-1M/01/testing/Evaluation-aligned_50K.tsv
 """
 
 ########################################################################################################################################################################################################
 # Input file format for evaluating performance of face aligned MS-Celeb-1M images.
 
 # Files -
-# MsCelebV1-Faces-Aligned-DevSet1.tsv
-# MsCelebV1-Faces-Aligned-DevSet2.tsv
+# aligned_50K.tsv
 
-# Text files, each line is an image record containing 6 columns, delimited by TAB.
-# Column1: Freebase MID (ground truth)
-# Column2: EntityNameString
-# Column3: ImageURL
-# Column4: FaceID
-# Column5: Not known
-# Column6: FaceData_Base64Encoded d Data
+# Text files, each line is an image record containing 2 columns, delimited by TAB.
+# Column1: Line number
+# Column2: FaceData_Base64Encoded d Data
 ########################################################################################################################################################################################################
 
 ########################################################################################################################################################################################################
 # Output file format for evaluating performance of face aligned MS-Celeb-1M images.
 
 # Text files, each line is an image record containing 6 columns, delimited by TAB.
-# Column1: Freebase MID (ground truth)
-# Column2: EntityNameString
-# Column3: ImageURL
-# Column4: FaceID
-# Column5: MID estimated
-# Column6: Confidence score
+# Column1: LineNumberIndex (please use the line number we offered in the test file)
+# Column2: MID estimated
+# Column3: Confidence score
 ########################################################################################################################################################################################################
 
 from __future__ import absolute_import
@@ -78,6 +68,7 @@ from tfface.classifier.Classifier import Classifier
 
 def main(args):
 	network_size = 299
+	probability_threshold = 50.0
 
 	if(not args.input_tsv_file):
 		raise ValueError('You must supply input TSV file with --input_tsv_file.')
@@ -97,21 +88,20 @@ def main(args):
 	if(not classifier_object.load_model(args.checkpoint_path, args.model_name, args.gpu_memory_fraction)):
 		return(False)
 
-   	number_of_images = 0
+    	number_of_images = 0
 	good_images = 0
 	input_tsv_file = open(args.input_tsv_file, 'r')
 	output_tsv_file = open(args.output_tsv_file, 'w')
-	while( True ):
-		
+	while( True ):		
 		input_data = input_tsv_file.readline().strip()
 		if( not input_data ):
        			break	
 
 		number_of_images += 1
+		fields = input_data.split('\t')
+		line_number = str(fields[0]) 
+      		image_string = fields[1]
 
-       		fields = input_data.split('\t')
-       		class_name = str(fields[0]) 
-       		image_string = fields[5]
        		decoded_image_string = base64.b64decode(image_string)
        		image_data = np.fromstring(decoded_image_string, dtype=np.uint8)
        		input_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
@@ -149,20 +139,19 @@ def main(args):
 			probabilities = map(operator.itemgetter(1), class_names_probabilities)
 			predicted_name = str(names[0])
 			probability = probabilities[0]
-			if( class_name == predicted_name ):
+			if( ( probability > probability_threshold) or ( probability > (probabilities[1] + probabilities[2]/2.0) ) ):
 				good_images += 1				
 
-		print(number_of_images, 'OK -', str(class_name == predicted_name), ', class_name -', class_name, ', predicted_name -', predicted_name, ', probability -', probability)
+		print(number_of_images, ', predicted_name -', predicted_name, ', probability -', probability)
+		print('Accuracy = ', (good_images * 100.0)/number_of_images, ' for ', number_of_images, ' images.')
 
 		#cv2.imshow('image', cropped_image)
 		#cv2.waitKey();
 
-		output_tsv_file.write(str(fields[0]) + '\t' + str(fields[1]) + '\t' + str(fields[2]) + '\t' + str(fields[3]) + '\t' + str(predicted_name) + '\t' + str(probability) + '\n')		
+		output_tsv_file.write(line_number + '\t' + str(predicted_name) + '\t' + str(probability) + '\n')
 
 	print('Accuracy = ', (good_images * 100.0)/number_of_images, ' for ', number_of_images, ' images.')
-
 	return(True)
-
 
 if __name__ == '__main__':
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
@@ -175,5 +164,6 @@ if __name__ == '__main__':
 	parser.add_argument('--dataset_dir', type=str, help='The directory where the dataset files are stored.', default='/dataset/tensorflow/facescrub')
 	parser.add_argument('--gpu_memory_fraction', type=float, help='Upper bound on the amount of GPU memory that will be used by the process.', default=0.6)	
 	main(parser.parse_args())
+
 
 
