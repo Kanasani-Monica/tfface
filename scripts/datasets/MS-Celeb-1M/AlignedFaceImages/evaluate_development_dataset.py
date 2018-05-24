@@ -63,13 +63,26 @@ import base64
 import sys
 import os
 import cv2
+from scipy import misc
 import argparse
+import operator
 
 from tfmtcnn.nets.FaceDetector import FaceDetector
 from tfmtcnn.nets.NetworkFactory import NetworkFactory
 
-def main(args):
+from datasets import dataset_utils
+from nets import nets_factory as network_factory
+from preprocessing import preprocessing_factory
 
+from tfface.classifier.Classifier import Classifier
+
+def to_rgb(img):
+    w, h = img.shape
+    ret = np.empty((w, h, 3), dtype=np.uint8)
+    ret[:, :, 0] = ret[:, :, 1] = ret[:, :, 2] = img
+    return ret
+
+def main(args):
 	if(not args.input_tsv_file):
 		raise ValueError('You must supply input TSV file with --input_tsv_file.')
 	if(not args.output_tsv_file):
@@ -82,24 +95,37 @@ def main(args):
 	last_network='ONet'
 	face_detector = FaceDetector(last_network, model_root_dir)
 
+	classifier_object = Classifier()
+	if(not classifier_object.load_dataset(args.dataset_dir)):
+		return(False)
+	if(not classifier_object.load_model(args.checkpoint_path, args.model_name, args.gpu_memory_fraction)):
+		return(False)
+
    	number_of_images = 0
+	good_images = 0
 	input_tsv_file = open(args.input_tsv_file, 'r')
 	output_tsv_file = open(args.output_tsv_file, 'w')
 	while( True ):
+		
 		input_data = input_tsv_file.readline().strip()
 		if( not input_data ):
        			break	
 
+		number_of_images += 1
+
        		fields = input_data.split('\t')
-       		class_name = fields[0] 
+       		class_name = str(fields[0]) 
        		image_string = fields[5]
        		decoded_image_string = base64.b64decode(image_string)
        		image_data = np.fromstring(decoded_image_string, dtype=np.uint8)
        		input_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
 		height, width, channels = input_image.shape
 
-		np_image = np.array(input_image)
-		boxes_c, landmarks = face_detector.detect(np_image)
+		cv2.imwrite('image.png', input_image)
+		input_image = misc.imread('image.png')	
+
+		input_clone = np.copy(input_image)
+		boxes_c, landmarks = face_detector.detect(input_clone)
 
 		face_probability = 0.0
 		found = False
@@ -108,24 +134,34 @@ def main(args):
 			if(boxes_c[index, 4] > face_probability):
 				found = True
       				face_probability = boxes_c[index, 4]
-				print(face_probability)
 				bounding_box = boxes_c[index, :4]
       				crop_box = [int(max(bounding_box[0],0)), int(max(bounding_box[1],0)), int(min(bounding_box[2], width)), int(min(bounding_box[3], height))]
 		if(found):
-			cropped_image = input_image[crop_box[1]:crop_box[3],crop_box[0]:crop_box[2],:]
+			cropped_image = input_image[crop_box[1]:crop_box[3],crop_box[0]:crop_box[2],:]			
 		else:
 			cropped_image = input_image
-		
-		cv2.imshow('image', cropped_image)
-		cv2.waitKey();
 
-		class_name = 'name'
-		probability = 1.0
-		output_tsv_file.write(fields[0] + '\t' + fields[1] + '\t' + fields[2] + '\t' + fields[3] + '\t' + class_name + '\t' + str(probability) + '\n')
+		#cropped_image = input_image
 
-		number_of_images += 1
+		class_names_probabilities = classifier_object.classify(scaled_image, print_results=False)
+		predicted_name = "Unknown"
+		probability = 0.0
+		if(len(class_names_probabilities) > 0):
+			names = map(operator.itemgetter(0), class_names_probabilities)
+			probabilities = map(operator.itemgetter(1), class_names_probabilities)
+			predicted_name = str(names[0])
+			probability = probabilities[0]
+			if( class_name == predicted_name ):
+				good_images += 1				
 
-	print('Number of input images - ' + str(number_of_images) + '.')
+		print(number_of_images, 'OK -', str(class_name == predicted_name), ', class_name -', class_name, ', predicted_name -', predicted_name, ', probability -', probability)
+
+		#cv2.imshow('image', cropped_image)
+		#cv2.waitKey();
+
+		output_tsv_file.write(str(fields[0]) + '\t' + str(fields[1]) + '\t' + str(fields[2]) + '\t' + str(fields[3]) + '\t' + str(predicted_name) + '\t' + str(probability) + '\n')		
+
+	print('Accuracy = ', (good_images * 100.0)/number_of_images, ' for ', number_of_images, ' images.')
 
 	return(True)
 
