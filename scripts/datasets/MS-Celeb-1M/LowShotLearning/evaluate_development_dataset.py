@@ -152,17 +152,20 @@ def main(args):
 					good_novel_images += 1				
 
 		print(number_of_images, 'OK -', str(class_name == predicted_name), ', class_name -', class_name, ', predicted_name -', predicted_name, ', probability -', probability)
-		print('Accuracy overall = ', (good_images * 100.0)/number_of_images)
+		print('Overall accuracy = ', (good_images * 100.0)/number_of_images)
 		if(number_of_base_images > 0):
-			print('Accuracy base = ', (good_base_images * 100.0)/number_of_base_images)
+			print('Base set accuracy = ', (good_base_images * 100.0)/number_of_base_images)
 		if(number_of_novel_images > 0):
-			print('Accuracy novel = ', (good_novel_images * 100.0)/number_of_novel_images )		
+			print('Novel set accuracy = ', (good_novel_images * 100.0)/number_of_novel_images )		
 
 		#cv2.imshow('image', cropped_image)
 		#cv2.waitKey();
 
-	if( (number_of_base_images > 0) and (number_of_novel_images >0) ):
-		print('Accuracy overall = ', (good_images * 100.0)/number_of_images, 'Accuracy base = ', (good_base_images * 100.0)/number_of_base_images, 'Accuracy novel = ', (good_novel_images * 100.0)/number_of_novel_images )	
+	print('Overall accuracy = ', (good_images * 100.0)/number_of_images)
+	if(number_of_base_images > 0):
+		print('Base set accuracy = ', (good_base_images * 100.0)/number_of_base_images)
+	if(number_of_novel_images > 0):
+		print('Novel set accuracy = ', (good_novel_images * 100.0)/number_of_novel_images )	
 
 	return(True)
 
