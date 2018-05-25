@@ -22,6 +22,8 @@
 
 """
 python evaluate_development_dataset.py --input_tsv_file /workspace/datasets/MS-Celeb-1M/02/development/DevelopmentSet.tsv --model_name=inception_resnet_v2 --checkpoint_path=/tensorflow/models/inception_resnet_v2/BEST_MS_21K --dataset_dir=/tensorflow/models/inception_resnet_v2/BEST_MS_21K
+
+python evaluate_development_dataset.py --input_tsv_file /workspace/datasets/MS-Celeb-1M/02/development/DevelopmentSet.tsv --model_name=inception_v3 --checkpoint_path=/tensorflow/models/inception_v3/BEST_MS_21K --dataset_dir=/tensorflow/models/inception_v3/BEST_MS_21K
 """
 
 ########################################################################################################################################################################################################
