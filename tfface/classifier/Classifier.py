@@ -39,61 +39,74 @@ class Classifier(object):
 
 	def __init__(self, model_name='inception_v3'):	
 	
-		self.model_name = model_name
+		self._model_name = model_name
+		self._model_path = None
 
-		self.has_dataset = False
-		self.has_model = False
+		self._has_dataset = False
+		self._has_model = False
+		self._number_of_classes = 0
+		self._network_image_size = 0
+		self._labels_to_names = []
+
+		self._graph = None
+		self._session = None
+
+		self._input_tensor = None 
+		self._tensor_probabilities = None
 		
+	def network_image_size(self):
+		return(self._network_image_size)
+
 	def load_dataset(self, dataset_dir):
-		self.has_dataset = False
+		self._has_dataset = False
 
-		self.labels_to_names = dataset_utils.read_label_file(dataset_dir)
-		self.number_of_classes = len(self.labels_to_names)
+		self._labels_to_names = dataset_utils.read_label_file(dataset_dir)
+		self._number_of_classes = len(self._labels_to_names)
 
-		if(self.number_of_classes > 0):
-			self.has_dataset = True
+		if(self._number_of_classes > 0):
+			self._has_dataset = True
 
-		return(self.has_dataset)
+		return(self._has_dataset)
 
 	def load_model(self, checkpoint_path, gpu_memory_fraction):
-		return(self.load_model(checkpoint_path, self.model_name, gpu_memory_fraction))
+		return(self.load_model(checkpoint_path, self._model_name, gpu_memory_fraction))
 
 	def load_model(self, checkpoint_path, model_name, gpu_memory_fraction):
-		self.has_model = False
+		self._has_model = False
 
-		if(not self.has_dataset):
-			return(self.has_model)
+		if(not self._has_dataset):
+			return(self._has_model)
 
-		self.model_name = model_name
+		self._model_name = model_name
 
 		if tf.gfile.IsDirectory(checkpoint_path):
-			self.model_path = tf.train.latest_checkpoint(checkpoint_path)
+			self._model_path = tf.train.latest_checkpoint(checkpoint_path)
 		else:
-			self.model_path = checkpoint_path
+			self._model_path = checkpoint_path
 
-		self.graph = tf.Graph()
-		with self.graph.as_default():
+		self._graph = tf.Graph()
+		with self._graph.as_default():
 
 			image_preprocessing_fn = preprocessing_factory.get_preprocessing(model_name, is_training=False)
-			network_fn = network_factory.get_network_fn(model_name, num_classes=self.number_of_classes, is_training=False)
-			network_image_size = network_fn.default_image_size		
+			network_fn = network_factory.get_network_fn(model_name, num_classes=self._number_of_classes, is_training=False)
+			self._network_image_size = network_fn.default_image_size		
 		
-			self.input_tensor = tf.placeholder(tf.uint8, (None, None, 3), 'input')
-			processed_image = image_preprocessing_fn(self.input_tensor, network_image_size, network_image_size)
+			self._input_tensor = tf.placeholder(tf.uint8, (None, None, 3), 'input')
+			processed_image = image_preprocessing_fn(self._input_tensor, self._network_image_size, self._network_image_size)
 			tensor_image  = tf.expand_dims(processed_image, 0)
 
 			tensor_logits, end_points = network_fn(tensor_image)
-			self.tensor_probabilities = tf.nn.softmax(tensor_logits)
+			self._tensor_probabilities = tf.nn.softmax(tensor_logits)
 
 			gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-        		self.session = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+        		self._session = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
 
-			init_fn = slim.assign_from_checkpoint_fn(self.model_path, slim.get_model_variables(network_factory.model_name_map[model_name]))
-			init_fn(self.session) 
+			init_fn = slim.assign_from_checkpoint_fn(self._model_path, slim.get_model_variables(network_factory.model_name_map[model_name]))
+			init_fn(self._session) 
 
-		self.has_model = True
+		self._has_model = True
 
-		return(self.has_model)
+		return(self._has_model)
 
 	def classify(self, input_image, use_top=5, print_results=False):
 
@@ -101,8 +114,8 @@ class Classifier(object):
 
 		class_probabilities = []
 		try:
-	 		feed_dict = {self.input_tensor:input_image}
-			class_probabilities = self.session.run(self.tensor_probabilities, feed_dict=feed_dict)
+	 		feed_dict = {self._input_tensor:input_image}
+			class_probabilities = self._session.run(self._tensor_probabilities, feed_dict=feed_dict)
        		except (IOError, ValueError, IndexError) as error:
 	       		return(class_names_probabilities)
 
@@ -113,7 +126,7 @@ class Classifier(object):
 		sorted_indices = [i[0] for i in sorted(enumerate(-class_probabilities), key=lambda x:x[1])]		
 
 		for index in range(use_top):
-			class_name = self.labels_to_names[sorted_indices[index]]
+			class_name = self._labels_to_names[sorted_indices[index]]
 			class_probability = class_probabilities[sorted_indices[index]]
 			class_names_probabilities.append([ class_name, class_probability])
 			if(print_results):

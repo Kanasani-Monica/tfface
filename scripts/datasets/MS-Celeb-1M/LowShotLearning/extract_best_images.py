@@ -21,14 +21,14 @@
 # SOFTWARE.
 
 """
-python extract_best_images.py --input_tsv_file /run/media/demo/327401D97401A0A9/CelebA/20K.tsv --output_dir /dataset/mtcnn_images/MS_21K --model_name=inception_v3 --checkpoint_path=/tensorflow/models/inception_v3/BEST_MS_20K --dataset_dir=/tensorflow/models/inception_v3/BEST_MS_20K
+python extract_best_images.py --input_tsv_file /workspace/datasets/MS-Celeb-1M/02/training/20K.tsv --output_dir /dataset/mtcnn_images/MS_21K --model_name=inception_v3 --checkpoint_path=/tensorflow/models/inception_v3/BEST_MS_20K --dataset_dir=/tensorflow/models/inception_v3/BEST_MS_20K
 """
 
 ########################################################################################################################################################################################################
 # File format for low shot learning MS-Celeb-1M image files.
 
 # Files -
-# MID2Name.tsv 
+# 20K.tsv 
 
 # File format: text files, each line is an image record containing 5 columns, delimited by TAB.
 # Column1: Image ID
@@ -66,9 +66,8 @@ def main(args):
     	if(not os.path.exists(output_dir)):
         	os.mkdir(output_dir)
 
-	mid_count = {}
-	network_size = 299
-	threshold = 0.95
+	is_processed = {}	
+	probability_threshold = [ 0.95, 0.90, 0.85, 0.80 ]
 
 	if(not args.input_tsv_file):
 		raise ValueError('You must supply input TSV file with --input_tsv_file.')
@@ -85,83 +84,85 @@ def main(args):
 	if(not classifier_object.load_model(args.checkpoint_path, args.model_name, args.gpu_memory_fraction)):
 		return(False)
 
-	celebrity_count = 0
-	input_tsv_file = open(args.input_tsv_file, 'r')
-	while( True ):
+	network_size = classifier_object.network_image_size()
+
+	celebrity_count = 0	
+	for current_threshold in probability_threshold:
+		input_tsv_file = open(args.input_tsv_file, 'r')
+
+		while( True ):
 		
-		input_data = input_tsv_file.readline().strip()
-		if( not input_data ):
-       			break			
+			input_data = input_tsv_file.readline().strip()
+			if( not input_data ):
+       				break			
 
-       		fields = input_data.split('\t')
-		
-       		class_name = str(fields[2]) 
-
-		if class_name in mid_count.keys():
-			continue
-
-       		image_string = fields[1]
-		image_search_rank = fields[3]
-       		decoded_image_string = base64.b64decode(image_string)
-       		image_data = np.fromstring(decoded_image_string, dtype=np.uint8)
-       		input_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
-		height, width, channels = input_image.shape
-
-		class_dir = fields[2] 
-		img_name = class_dir + '.png'
-
-		cv2.imwrite('image.png', input_image)
-		#misc.imsave('image.png', input_image)
-		input_image = misc.imread('image.png')	
-
-		input_clone = np.copy(input_image)
-		boxes_c, landmarks = face_detector.detect(input_clone)
-
-		face_probability = 0.0
-		found = False
-		crop_box = []
-       		for index in range(boxes_c.shape[0]):      			
-			if(boxes_c[index, 4] > face_probability):
-				found = True
-      				face_probability = boxes_c[index, 4]
-				bounding_box = boxes_c[index, :4]
-      				crop_box = [int(max(bounding_box[0],0)), int(max(bounding_box[1],0)), int(min(bounding_box[2], width)), int(min(bounding_box[3], height))]
-		if(found):
-			cropped_image = input_image[crop_box[1]:crop_box[3],crop_box[0]:crop_box[2],:]			
-		else:
-			cropped_image = input_image
-
-		#resized_image = cv2.resize(cropped_image, (network_size, network_size), interpolation=cv2.INTER_LINEAR)
-		resized_image = misc.imresize(cropped_image, (network_size, network_size), interp='bilinear')
-
-		class_names_probabilities = classifier_object.classify(resized_image, print_results=False)
-		predicted_name = ''
-		probability = 0.0
-		if(len(class_names_probabilities) > 0):
-			names = map(operator.itemgetter(0), class_names_probabilities)
-			probabilities = map(operator.itemgetter(1), class_names_probabilities)
-			predicted_name = str(names[0])
-			probability = probabilities[0]
-			if( class_name != predicted_name ):
+       			fields = input_data.split('\t')		
+       			class_name = str(fields[2]) 
+			if class_name in is_processed.keys():
 				continue
 
-			if(probability < threshold):
-				continue  
+       			image_string = fields[1]
+			image_search_rank = fields[3]
+       			decoded_image_string = base64.b64decode(image_string)
+       			image_data = np.fromstring(decoded_image_string, dtype=np.uint8)
+       			input_image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
+			height, width, channels = input_image.shape
 
-		mid_count[class_name] = True
+			class_dir = fields[2] 
+			img_name = class_dir + '.png'
 
-       		full_class_dir = os.path.join(output_dir, class_dir)
-       		if not os.path.exists(full_class_dir):
-       			os.mkdir(full_class_dir)
-       			celebrity_count = celebrity_count + 1
+			cv2.imwrite('image.png', input_image)
+			#misc.imsave('image.png', input_image)
+			input_image = misc.imread('image.png')	
 
-       		full_path = os.path.join(full_class_dir, img_name)
-       		cv2.imwrite(full_path, resized_image)            		
+			input_clone = np.copy(input_image)
+			boxes_c, landmarks = face_detector.detect(input_clone)
 
-		#cv2.imshow('image', cropped_image)
-		#cv2.waitKey();
+			face_probability = 0.0
+			found = False
+			crop_box = []
+       			for index in range(boxes_c.shape[0]):      			
+				if(boxes_c[index, 4] > face_probability):
+					found = True
+      					face_probability = boxes_c[index, 4]
+					bounding_box = boxes_c[index, :4]
+      					crop_box = [int(max(bounding_box[0],0)), int(max(bounding_box[1],0)), int(min(bounding_box[2], width)), int(min(bounding_box[3], height))]
+			if(found):
+				cropped_image = input_image[crop_box[1]:crop_box[3],crop_box[0]:crop_box[2],:]			
+			else:
+				cropped_image = input_image
 
-	print('celebrity_count',celebrity_count)
+			#resized_image = cv2.resize(cropped_image, (network_size, network_size), interpolation=cv2.INTER_LINEAR)
+			resized_image = misc.imresize(cropped_image, (network_size, network_size), interp='bilinear')
+
+			class_names_probabilities = classifier_object.classify(resized_image, print_results=False)
+			predicted_name = ''
+			probability = 0.0
+			if(len(class_names_probabilities) > 0):
+				names = map(operator.itemgetter(0), class_names_probabilities)
+				probabilities = map(operator.itemgetter(1), class_names_probabilities)
+				predicted_name = str(names[0])
+				probability = probabilities[0]
+				if( class_name != predicted_name ):
+					continue
+
+				if(probability < current_threshold):
+					continue  
+
+			is_processed[class_name] = True
+
+       			full_class_dir = os.path.join(output_dir, class_dir)
+       			if not os.path.exists(full_class_dir):
+       				os.mkdir(full_class_dir)
+       				celebrity_count = celebrity_count + 1
+
+       			full_path = os.path.join(full_class_dir, img_name)
+       			cv2.imwrite(full_path, resized_image)            		
+
+			#cv2.imshow('image', cropped_image)
+			#cv2.waitKey();
+
+	print('Processed ', celebrity_count, 'celebrities.')
 	return(True)
 
 
@@ -171,7 +172,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--input_tsv_file', type=str, help='Input TSV file.')
 	parser.add_argument('--output_dir', type=str, help='Output base directory for the image dataset')
-	parser.add_argument('--model_name', type=str, help='The name of the architecture to evaluate.', default='inception_v3')    
+	parser.add_argument('--model_name', type=str, help='The name of the architecture to evaluate.', default='inception_resnet_v2')    
 	parser.add_argument('--checkpoint_path', type=str, help='The directory where the model was written to or an absolute path to a checkpoint file.', default='/tensorflow/models/inception_resnet_v2/BEST_MS_21K')
 	parser.add_argument('--dataset_dir', type=str, help='The directory where the dataset files are stored.', default='/tensorflow/models/inception_resnet_v2/BEST_MS_21K')
 	parser.add_argument('--gpu_memory_fraction', type=float, help='Upper bound on the amount of GPU memory that will be used by the process.', default=0.6)	
