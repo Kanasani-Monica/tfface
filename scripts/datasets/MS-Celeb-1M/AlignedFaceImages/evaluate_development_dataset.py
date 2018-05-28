@@ -77,8 +77,6 @@ from preprocessing import preprocessing_factory
 from tfface.classifier.Classifier import Classifier
 
 def main(args):
-	network_size = 299
-
 	if(not args.input_tsv_file):
 		raise ValueError('You must supply input TSV file with --input_tsv_file.')
 	if(not args.output_tsv_file):
@@ -96,6 +94,8 @@ def main(args):
 		return(False)
 	if(not classifier_object.load_model(args.checkpoint_path, args.model_name, args.gpu_memory_fraction)):
 		return(False)
+
+	network_size = classifier_object.network_image_size()
 
    	number_of_images = 0
 	good_images = 0
