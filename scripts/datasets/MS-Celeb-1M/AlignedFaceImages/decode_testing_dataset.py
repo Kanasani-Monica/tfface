@@ -20,17 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import numpy as np
-import base64
-import sys
-import os
-import cv2
-import argparse
-
 """
 python decode_testing_dataset.py /workspace/datasets/images/MS-Celeb-1M/test_aligned --tsv_files /workspace/datasets/MS-Celeb-1M/test/aligned_50K.tsv 1>0.1 2>0.2 &
 """
@@ -45,6 +34,17 @@ python decode_testing_dataset.py /workspace/datasets/images/MS-Celeb-1M/test_ali
 # Column1: Line number
 # Column2: FaceData_Base64Encoded d Data
 ########################################################################################################################################################################################################
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+import base64
+import sys
+import os
+import cv2
+import argparse
 
 def main(args):
 	output_dir = os.path.expanduser(args.output_dir)

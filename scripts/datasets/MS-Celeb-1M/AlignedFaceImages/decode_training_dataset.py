@@ -20,17 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import numpy as np
-import base64
-import sys
-import os
-import cv2
-import argparse
-
 """
 python decode_training_dataset.py /workspace/datasets/images/ms1m_aligned-00/ --tsv_files /workspace/MS-Celeb-1M/AlignedFaceImages/MsCelebV1-Faces-Aligned.part.00.tsv 1>00.1 2>00.2 &
 
@@ -88,6 +77,17 @@ python decode_training_dataset.py /workspace/datasets/images/ms1m_aligned/ --tsv
 # Average images per entity - 85
 # Total file size (uncompressed) - 89GB
 ########################################################################################################################################################################################################
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+import base64
+import sys
+import os
+import cv2
+import argparse
 
 def main(args):
 	output_dir = os.path.expanduser(args.output_dir)

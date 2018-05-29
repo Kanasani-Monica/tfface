@@ -52,13 +52,14 @@ import numpy as np
 import base64
 import sys
 import os
-import cv2
-from scipy import misc
 import argparse
 import operator
 
-from tfmtcnn.nets.FaceDetector import FaceDetector
-from tfmtcnn.nets.NetworkFactory import NetworkFactory
+import cv2
+from scipy import misc
+
+from tfmtcnn.networks.FaceDetector import FaceDetector
+from tfmtcnn.networks.NetworkFactory import NetworkFactory
 
 from datasets import dataset_utils
 from nets import nets_factory as network_factory

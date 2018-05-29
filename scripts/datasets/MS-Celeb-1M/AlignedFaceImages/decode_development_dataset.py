@@ -20,17 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import numpy as np
-import base64
-import sys
-import os
-import cv2
-import argparse
-
 """
 python decode_development_dataset.py /workspace/datasets/images/MS-Celeb-1M/01/development/01 --tsv_files /workspace/datasets/MS-Celeb-1M/01/development/MsCelebV1-Faces-Aligned-DevSet1.tsv
 
@@ -52,6 +41,17 @@ python decode_development_dataset.py /workspace/datasets/images/MS-Celeb-1M/01/d
 # Column5: Not known
 # Column6: FaceData_Base64Encoded d Data
 ########################################################################################################################################################################################################
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+import base64
+import sys
+import os
+import cv2
+import argparse
 
 def main(args):
 	output_dir = os.path.expanduser(args.output_dir)

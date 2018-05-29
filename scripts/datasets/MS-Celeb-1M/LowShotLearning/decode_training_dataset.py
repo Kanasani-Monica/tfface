@@ -20,17 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import numpy as np
-import base64
-import sys
-import os
-import cv2
-import argparse
-
 """
 python decode_training_dataset.py /workspace/datasets/images/ms1m_20K/ --tsv_files /workspace/MS-Celeb-1M/LowShotLearning/BaseSet/20K.tsv 
 """
@@ -64,6 +53,17 @@ python decode_training_dataset.py /workspace/datasets/images/ms1m_20K/ --tsv_fil
 # Column4: ImageSearchRank
 # Column5: ImageURL
 ########################################################################################################################################################################################################
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import numpy as np
+import base64
+import sys
+import os
+import cv2
+import argparse
 
 def main(args):
 	output_dir = os.path.expanduser(args.output_dir)
