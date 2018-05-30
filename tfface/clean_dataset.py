@@ -47,6 +47,9 @@ import sys
 
 from tfface.classifier.Classifier import Classifier
 
+from tfface.tools.read_class_names import read_class_names
+from tfface.tools.get_class_names import get_class_names
+
 def process(args):
 
 	if(not os.path.isfile(args.class_name_file)):
