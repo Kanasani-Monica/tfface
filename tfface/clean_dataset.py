@@ -58,15 +58,14 @@ import cv2
 
 from tfface.classifier.Classifier import Classifier
 
-from tfface.tools.read_class_names import read_class_names
-from tfface.tools.get_class_names import get_class_names
+from tfface.tools.DatasetAnalyzer import DatasetAnalyzer
 
 def process(args):
 
-	class_names = read_class_names(args.class_name_file)
+	class_names = DatasetAnalyzer.read_class_names(args.class_name_file)
 
 	if(len(class_names) == 0):
-		class_names = get_class_names(args.source_dir)
+		class_names = DatasetAnalyzer.get_class_names(args.source_dir)
 	no_of_classes = len(class_names)
 	if(no_of_classes == 0):
 		return(False)
