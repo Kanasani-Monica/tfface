@@ -26,11 +26,20 @@ Usage:
 ```shell
 
 $ python clean_dataset.py \
+	--model_name=inception_v3 \
+	--checkpoint_path=/tensorflow/models/inception_v3/FaceScrub \
+	--dataset_dir=/tensorflow/datasets/FaceScrub \
+	--source_dir=/datasets/mtcnn_images/FaceScrub \
+	--target_dir=/datasets/mtcnn_images/FaceScrub_BACKUP \
+	--use_top=1 \
+	--gpu_memory_fraction=0.1 
+
+$ python clean_dataset.py \
 	--model_name=inception_resnet_v2 \
 	--checkpoint_path=/tensorflow/models/inception_resnet_v2/BEST_MS_100K \
 	--dataset_dir=/tensorflow/models/inception_resnet_v2/BEST_MS_100K \
-	--source_dir=/datasets/MS_100K \
-	--target_dir=/datasets/MS_100K_BACKUP \
+	--source_dir=/datasets/mtcnn_images/MS_100K \
+	--target_dir=/datasets/mtcnn_images/MS_100K_BACKUP \
 	--use_top=1 \
 	--gpu_memory_fraction=0.1 \
 	--class_name_file=class-file 
@@ -45,15 +54,14 @@ import argparse
 import os
 import sys
 
+import cv2
+
 from tfface.classifier.Classifier import Classifier
 
 from tfface.tools.read_class_names import read_class_names
 from tfface.tools.get_class_names import get_class_names
 
 def process(args):
-
-	if(not os.path.isfile(args.class_name_file)):
-		return(False)
 
 	class_names = read_class_names(args.class_name_file)
 
@@ -69,23 +77,24 @@ def process(args):
 	if(not classifier_object.load_model(args.checkpoint_path, args.model_name, args.gpu_memory_fraction)):
 		return(False)
 
-	network_size = classifier_object.network_image_size()
-
 	source_path = os.path.expanduser(args.source_dir)
 	target_path = os.path.expanduser(args.target_dir)
 
 	good_files = 0
 	bad_files = 0
 
+	processed_classes = 0
+	show_result = int(max( (no_of_classes * (5.0/100.0)), 10) )
 	for class_name in class_names:
 
 		source_class_dir = os.path.join(source_path, class_name)
 		if(not os.path.isdir(source_class_dir)):
 			continue
 
-		images = os.listdir(source_class_dir)
-		for image in images:
-			source_filename = os.path.join(source_class_dir, image)
+		image_file_names = os.listdir(source_class_dir)
+		for image_file_name in image_file_names:
+			source_filename = os.path.join(source_class_dir, image_file_name)
+
 			if(not os.path.isfile(source_filename)):
 				continue
 
@@ -111,10 +120,14 @@ def process(args):
 				if( not os.path.exists(target_class_dir) ):
 					os.makedirs(target_class_dir)
 
-				target_filename = os.path.join(target_class_dir, image)
+				target_filename = os.path.join(target_class_dir, image_file_name)
 				os.rename(source_filename, target_filename)
 
 				bad_files = bad_files + 1
+
+		processed_classes += 1
+		if( processed_classes % show_result == 0):
+			print(processed_classes, ' classes are processed.')
 
 	print("Good files are - " + str(good_files) + " and bad files are - " + str(bad_files))
 	return(True)
@@ -140,12 +153,6 @@ def main(args):
 
 	if(not args.target_dir):
 		raise ValueError('You must supply the target directory with --target_dir')
-
-	if(not args.class_name_file):
-		raise ValueError('You must supply the class name file with --class_name_file')
-	if(not os.path.exists(args.class_name_file)):
-		print('The class name file is missing. Error processing the data source without the class name file.')
-		return
 
 	target_dir = os.path.expanduser(args.target_dir)
 	if(not os.path.exists(target_dir)):
