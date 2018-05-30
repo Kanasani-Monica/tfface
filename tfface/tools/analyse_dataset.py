@@ -26,12 +26,12 @@ Usage:
 ```shell
 
 $ python analyse_dataset.py \
-	--source_dir=/datasets/mtcnn_images/FaceScrub
+	--source_dir=/datasets/mtcnn_images/face_images
 
 $ python analyse_dataset.py \
-	--source_dir=/datasets/mtcnn_images/FaceScrub \
+	--source_dir=/datasets/mtcnn_images/face_images \
 	--min_no_of_images=30 \
-	--backup_dir=/datasets/mtcnn_images/FaceScrub_BACKUP
+	--backup_dir=/datasets/mtcnn_images/face_images_BACKUP
 ```
 """
 

@@ -27,19 +27,19 @@ Usage:
 
 $ python clean_dataset.py \
 	--model_name=inception_v3 \
-	--checkpoint_path=/tensorflow/models/inception_v3/FaceScrub \
-	--dataset_dir=/tensorflow/datasets/FaceScrub \
-	--source_dir=/datasets/mtcnn_images/FaceScrub \
-	--target_dir=/datasets/mtcnn_images/FaceScrub_BACKUP \
+	--checkpoint_path=/tensorflow/models/inception_v3/face_images \
+	--dataset_dir=/tensorflow/datasets/face_images \
+	--source_dir=/datasets/mtcnn_images/face_images \
+	--target_dir=/datasets/mtcnn_images/face_images_BACKUP \
 	--use_top=1 \
 	--gpu_memory_fraction=0.1 
 
 $ python clean_dataset.py \
 	--model_name=inception_resnet_v2 \
-	--checkpoint_path=/tensorflow/models/inception_resnet_v2/BEST_MS_100K \
-	--dataset_dir=/tensorflow/models/inception_resnet_v2/BEST_MS_100K \
-	--source_dir=/datasets/mtcnn_images/MS_100K \
-	--target_dir=/datasets/mtcnn_images/MS_100K_BACKUP \
+	--checkpoint_path=/tensorflow/models/inception_resnet_v2/face_images \
+	--dataset_dir=/tensorflow/datasets/face_images \
+	--source_dir=/datasets/mtcnn_images/face_images \
+	--target_dir=/datasets/mtcnn_images/face_images_BACKUP \
 	--use_top=1 \
 	--gpu_memory_fraction=0.1 \
 	--class_name_file=class-file 

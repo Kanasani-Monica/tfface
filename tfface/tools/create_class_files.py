@@ -26,7 +26,7 @@ Usage:
 ```shell
 
 $ python create_class_files.py \
-	--source_dir=/datasets/mtcnn_images/FaceScrub \
+	--source_dir=/datasets/mtcnn_images/face_images \
 	--base_file_name=class-file- 
 	--no_of_subsets=4
 ```
