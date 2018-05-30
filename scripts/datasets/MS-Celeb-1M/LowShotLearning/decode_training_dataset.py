@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-python decode_training_dataset.py /workspace/datasets/images/ms1m_20K/ --tsv_files /workspace/MS-Celeb-1M/LowShotLearning/BaseSet/20K.tsv 
+python decode_training_dataset.py --output_dir /datasets/images/ms1m_20K/ --tsv_files /datasets/MS-Celeb-1M/LowShotLearning/BaseSet/20K.tsv 
 """
 
 ########################################################################################################################################################################################################
@@ -98,8 +98,7 @@ def main(args):
 if __name__ == '__main__':
   
 	parser = argparse.ArgumentParser()
-	parser.add_argument('output_dir', type=str, help='Output base directory for the image dataset')
-	parser.add_argument('mid_file', type=argparse.FileType('r'), help='Input MID to celebrity name TSV file name')
+	parser.add_argument('--output_dir', type=str, help='Output base directory for the image dataset')
 	parser.add_argument('--tsv_files', type=argparse.FileType('r'), nargs='+', help='Input TSV file name(s)')
 	parser.add_argument('--output_format', type=str, help='Format of the output images', default='png', choices=['png', 'jpg'])
 	
