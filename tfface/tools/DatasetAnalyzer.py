@@ -146,66 +146,6 @@ class DatasetAnalyzer(object):
 
 		return(OK, sorted_data_source)
 
-	def extract_classes(self, source_dir, target_dir, class_name_file):
-		OK = False
-
-		if(not DatasetAnalyzer.check_dataset_dir(source_dir)):
-			return(OK)
-
-		if( os.path.exists(target_dir) and (not os.path.isdir(target_dir)) ):
-			return(OK)
-
-		if( not os.path.exists(class_name_file) ):
-			return(OK)
-
-		class_names = DatasetAnalyzer.read_class_names(class_name_file)
-		if(len(class_names) == 0):
-			return(OK)
-
-		if( not os.path.exists(target_dir)):
-			os.makedirs(target_dir)
-	
-		source_path = os.path.expanduser(source_dir)
-		target_path = os.path.expanduser(target_dir)
-
-		for class_name in class_names:	
-			source_class_dir = os.path.join(source_path, class_name)
-			if(not os.path.isdir(source_class_dir)):
-				continue
-
-			target_class_dir = os.path.join(target_path, class_name)
-			os.rename(source_class_dir, target_class_dir)
-
-		OK = True
-		return(OK)
-
-	def format(self, data_source_dir):
-		OK = False
-
-		if(not DatasetAnalyzer.check_dataset_dir(data_source_dir)):
-			return(OK)
-
-		class_names = DatasetAnalyzer.get_class_names(data_source_dir)
-
-		for class_name in class_names:						
-			class_source_dir = os.path.join(data_source_dir, class_name)	
-
-			if(not os.path.isdir(class_source_dir)):
-				continue
-
-			no_of_images = 0
-			for pattern in self._patterns:
-				images = fnmatch.filter(os.listdir(class_source_dir), pattern)
-				for image in images:
-					source_file_name = os.path.join(class_source_dir, image)
-					filename, file_extension = os.path.splitext(source_file_name)	
-					new_file_name = "Class-" + class_name + "-Image-" + str(no_of_images) + file_extension
-					destination_file_name = os.path.join(class_source_dir, new_file_name)
-					os.rename(source_file_name, destination_file_name)
-					no_of_images = no_of_images + 1
-
-		OK = True
-		return(OK)
 
 	def create_class_files(self, data_source_dir, no_of_subsets, base_file_name):
 		OK, data_source = self.analyse(data_source_dir, sort_results=False)
@@ -233,5 +173,72 @@ class DatasetAnalyzer(object):
 					for class_name in subset:
 						subset_file.write(class_name + os.linesep)
 					subset_file.close()
+		return(OK)
+
+
+	def extract_classes(self, source_dir, target_dir, target_number_of_classes):
+		OK = False
+
+		if(not DatasetAnalyzer.check_dataset_dir(source_dir)):
+			return(OK)
+
+		if( os.path.exists(target_dir) and (not os.path.isdir(target_dir)) ):
+			return(OK)
+
+		OK, data_source = self.analyse(source_dir, sort_results=True)
+		source_number_of_classes = len(data_source)
+		if(source_number_of_classes == 0):
+			return(OK)
+
+		if(source_number_of_classes < target_number_of_classes):
+			target_number_of_classes = source_number_of_classes
+
+		source_class_names = map(operator.itemgetter(0), data_source)
+		target_class_names = source_class_names[:target_number_of_classes]
+
+		if(not os.path.exists(target_dir)):
+			os.makedirs(target_dir)
+	
+		source_path = os.path.expanduser(source_dir)
+		target_path = os.path.expanduser(target_dir)
+
+		for class_name in target_class_names:	
+			source_class_dir = os.path.join(source_path, class_name)
+			if(not os.path.isdir(source_class_dir)):
+				continue
+
+			target_class_dir = os.path.join(target_path, class_name)
+			os.rename(source_class_dir, target_class_dir)
+
+		OK = True
+		return(OK)
+
+
+	def format(self, data_source_dir):
+		OK = False
+
+		if(not DatasetAnalyzer.check_dataset_dir(data_source_dir)):
+			return(OK)
+
+		class_names = DatasetAnalyzer.get_class_names(data_source_dir)
+
+		for class_name in class_names:						
+			class_source_dir = os.path.join(data_source_dir, class_name)	
+
+			if(not os.path.isdir(class_source_dir)):
+				continue
+
+			no_of_images = 0
+			for pattern in self._patterns:
+				images = fnmatch.filter(os.listdir(class_source_dir), pattern)
+				for image in images:
+					source_file_name = os.path.join(class_source_dir, image)
+					filename, file_extension = os.path.splitext(source_file_name)	
+					new_file_name = "Class-" + class_name + "-Image-" + str(no_of_images) + file_extension
+					destination_file_name = os.path.join(class_source_dir, new_file_name)
+					os.rename(source_file_name, destination_file_name)
+					no_of_images = no_of_images + 1
+
+		OK = True
 		return(OK)
 
