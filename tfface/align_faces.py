@@ -83,6 +83,8 @@ def align_faces(args):
 
 	last_network='ONet'
 	face_detector = FaceDetector(last_network, model_root_dir)
+	face_detector.set_threshold([0.6, 0.7, 0.7])
+	face_detector.set_min_face_size(20)
 
 	total_no_of_images = 0
 	successfully_aligned_images = 0
