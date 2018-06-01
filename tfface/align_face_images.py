@@ -97,6 +97,14 @@ def process(args):
 	total_no_of_images = 0
 	successfully_aligned_images = 0
 
+	if(args.class_name_file):
+		prefix = args.class_name_file + '-'
+	else:
+		prefix = ""
+
+	successful_images = open(prefix + 'successful.txt', 'w')
+	unsuccessful_images = open(prefix + 'unsuccessful.txt', 'w')	
+
 	for class_name in classes:
 
 		source_class_dir = os.path.join(source_path, class_name)
@@ -112,6 +120,7 @@ def process(args):
 
 			total_no_of_images += 1
 
+			source_relative_path = os.path.join(class_name, image_filename)
 			source_filename = os.path.join(source_class_dir, image_filename)
 			if( not os.path.isfile(source_filename) ):
 				continue
@@ -123,12 +132,11 @@ def process(args):
                     		try:
                         		image = misc.imread(source_filename)
                     		except (IOError, ValueError, IndexError) as error:
-                        		error_message = 'Error processing the image - {} , due to {}'.format(source_filename, error)
-                        		print(error_message)
+                        		unsuccessful_images.write(source_relative_path + os.linesep)
 					continue
                     		else:
                         		if(image.ndim < 2):
-                            			print('Error processing the image - "%s" - with color channels less than 2.' % source_filename)
+                            			unsuccessful_images.write(source_relative_path + os.linesep)
                             			continue
 				
                         		if(image.ndim == 2):
@@ -142,7 +150,6 @@ def process(args):
                             			img_size = np.asarray(image.shape)[0:2]
 
                             			if(no_of_faces > 1):
-							print('Number of faces are more that one in image "%s".'% image_filename)
                                 			bounding_box_size = (det[:,2]-det[:,0])*(det[:,3]-det[:,1])
                                 			image_center = img_size / 2
                                 			offsets = np.vstack([ (det[:,0]+det[:,2])/2-image_center[1], (det[:,1]+det[:,3])/2-image_center[0] ])
@@ -169,8 +176,9 @@ def process(args):
 
                             			successfully_aligned_images += 1
                             			misc.imsave(target_filename, scaled_image)
+						successful_images.write(source_relative_path + os.linesep)
                         		else:
-                            			print('Error detecting the face in image "%s".' % source_filename)               
+                            			unsuccessful_images.write(source_relative_path + os.linesep)
 
                             
 	print('Total number of images are - %d' % total_no_of_images)

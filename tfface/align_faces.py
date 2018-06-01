@@ -124,7 +124,7 @@ def align_faces(args):
                		try:
                        		current_image = cv2.imread(source_filename, cv2.IMREAD_COLOR)
                		except (IOError, ValueError, IndexError) as error:
-				unsuccessful_images.write(source_relative_path + '\n')
+				unsuccessful_images.write(source_relative_path + os.linesep)
 				continue
 
 			if(current_image is None):
@@ -160,11 +160,11 @@ def align_faces(args):
 				resized_image = cv2.resize(cropped_image, (args.image_size, args.image_size), interpolation=cv2.INTER_LINEAR)
 	       			
 	       			cv2.imwrite(target_filename, resized_image)
-				successful_images.write(source_relative_path + '\n')
+				successful_images.write(source_relative_path + os.linesep)
 
 				successfully_aligned_images += 1
 			else:
-				unsuccessful_images.write(source_relative_path + '\n')
+				unsuccessful_images.write(source_relative_path + os.linesep)
 
 	print('Total number of images are - %d' % total_no_of_images)
 	print('Number of successfully aligned images are - %d' % successfully_aligned_images)
